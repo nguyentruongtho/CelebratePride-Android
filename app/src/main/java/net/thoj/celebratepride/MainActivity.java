@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -40,6 +41,8 @@ public class MainActivity extends AppCompatActivity {
   private static final int REQUEST_TAKE_PICTURE = 1;
   private static final int REQUEST_GALLERY_PICTURE = 2;
   private static final String FIRST_LAUNCH_PREF = TAG + ".firstLaunch";
+  private static final long FILE_SIZE_1M = 1024 * 1024;
+  private static final int REQUIRED_SIZE = 800; // 800 pixel width
 
   @InjectView(R.id.photo) ImageButton photo;
   @InjectView(android.R.id.progress) View progress;
@@ -192,9 +195,26 @@ public class MainActivity extends AppCompatActivity {
       File imageFile = new File(dataPath);
 
       if (imageFile.exists()) {
-        displayPhoto(imageFile);
-      } else {
-        Toast.makeText(this, R.string.error_load_image, Toast.LENGTH_SHORT).show();
+        if (imageFile.length() > FILE_SIZE_1M) {
+          BitmapFactory.Options options = new BitmapFactory.Options();
+          try {
+            options.inJustDecodeBounds = true;
+            BitmapFactory.decodeFile(dataPath, options);
+
+            int scale = 1;
+            while (options.outWidth / scale / 2 >= REQUIRED_SIZE && options.outHeight / scale / 2 >= REQUIRED_SIZE) scale *= 2;
+
+            //Decode with inSampleSize
+            BitmapFactory.Options o2 = new BitmapFactory.Options();
+            o2.inSampleSize = scale;
+            options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+            handleBitmapPicture(BitmapFactory.decodeFile(dataPath, o2));
+          } catch (Exception ex) {
+            Toast.makeText(this, R.string.error_load_image, Toast.LENGTH_SHORT).show();
+          }
+        } else {
+          displayPhoto(imageFile);
+        }
       }
     }
   }

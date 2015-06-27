@@ -20,7 +20,6 @@ public class CelebratePrideTransformation implements Transformation {
     Bitmap result = Bitmap.createBitmap(width, height, source.getConfig());
     Bitmap overlay = Bitmap.createBitmap(width, height, source.getConfig());
 
-    int[] pixels = new int[width * height];
     int delta = source.getHeight() / 6;
     int color1 = res.getColor(R.color.celebrate_color_overlay1);
     int color2 = res.getColor(R.color.celebrate_color_overlay2);
@@ -31,27 +30,29 @@ public class CelebratePrideTransformation implements Transformation {
     for (int y = 0; y < height; ++y) {
       for (int x = 0; x < width; ++x) {
         if (y / delta < 1) {
-          pixels[x + y * width] = color1;
+          overlay.setPixel(x, y, color1);
         } else if (y / delta < 2) {
-          pixels[x + y * width] = color2;
+          overlay.setPixel(x, y, color2);
         } else if (y / delta < 3) {
-          pixels[x + y * width] = color3;
+          overlay.setPixel(x, y, color3);
         } else if (y / delta < 4) {
-          pixels[x + y * width] = color4;
+          overlay.setPixel(x, y, color4);
         } else if (y / delta < 5) {
-          pixels[x + y * width] = color5;
+          overlay.setPixel(x, y, color5);
         } else {
-          pixels[x + y * width] = color6;
+          overlay.setPixel(x, y, color6);
         }
       }
     }
-    overlay.setPixels(pixels, 0, width, 0, 0, width, height);
 
     Canvas canvas = new Canvas(result);
     canvas.drawBitmap(source, new Matrix(), null);
     canvas.drawBitmap(overlay, 0, 0, null);
-    if (result != source) {
+    if (source != result) {
       source.recycle();
+    }
+    if (overlay != result) {
+      overlay.recycle();
     }
     return result;
   }
