@@ -46,12 +46,12 @@ public class MainActivity extends AppCompatActivity {
 
   @OnClick(R.id.photo) void sharePhoto() {
     if (lastUri != null) {
-      Picasso.with(this)
+      picasso
           .load(lastUri)
           .transform(new CelebratePrideTransformation(this))
           .into(shareBitmapTarget);
     } else {
-      Picasso.with(this).load(R.drawable.sample).into(shareBitmapTarget);
+      picasso.load(R.drawable.sample).into(shareBitmapTarget);
     }
   }
 
@@ -94,6 +94,7 @@ public class MainActivity extends AppCompatActivity {
   private ShareActionProvider shareActionProvider;
   private Target shareBitmapTarget;
   private Uri lastUri;
+  private Picasso picasso;
 
   @Override protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -102,11 +103,13 @@ public class MainActivity extends AppCompatActivity {
     ButterKnife.inject(this);
     shareBitmapTarget = new ShareTarget();
     shareActionProvider = new ShareActionProvider(this);
+    picasso = Picasso.with(this);
   }
 
   @Override protected void onDestroy() {
     shareBitmapTarget = null;
     shareActionProvider = null;
+    picasso.cancelRequest(photo);
     super.onDestroy();
   }
 
@@ -198,9 +201,8 @@ public class MainActivity extends AppCompatActivity {
 
   private void displayPhoto(final Uri imageUri) {
     progress.setVisibility(View.VISIBLE);
-    Picasso.with(this)
-        .load(imageUri)
-        .resize((int) getResources().getDimension(R.dimen.photo_size), 0)
+
+    picasso.load(imageUri)
         .error(R.drawable.t7m)
         .transform(new CelebratePrideTransformation(this))
         .into(photo, new Callback() {
@@ -212,6 +214,7 @@ public class MainActivity extends AppCompatActivity {
 
           @Override public void onError() {
             progress.setVisibility(View.GONE);
+            Log.d(TAG, "Unable to load image " + imageUri);
             Toast.makeText(MainActivity.this, R.string.error_load_image, Toast.LENGTH_SHORT).show();
           }
         });

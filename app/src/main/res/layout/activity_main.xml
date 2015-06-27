@@ -14,17 +14,18 @@
   <FrameLayout
       android:layout_width="@dimen/photo_size"
       android:layout_height="@dimen/photo_size"
-      android:background="@drawable/photo_background"
-      android:padding="@dimen/size_02"
+      android:clickable="true"
       android:layout_marginBottom="@dimen/size_02"
       >
       <ImageButton
           android:id="@+id/photo"
+          android:clickable="false"
           android:layout_width="match_parent"
           android:layout_height="match_parent"
-          android:padding="0dp"
+          android:padding="@dimen/size_02"
           android:src="@drawable/sample"
           android:scaleType="fitCenter"
+          android:background="@drawable/photo_background"
           android:contentDescription="@null"
           />
       <ProgressBar

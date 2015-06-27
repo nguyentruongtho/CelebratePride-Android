@@ -15,26 +15,37 @@ public class CelebratePrideTransformation implements Transformation {
   }
 
   @Override public Bitmap transform(Bitmap source) {
-    Bitmap result = Bitmap.createBitmap(source.getWidth(), source.getHeight(), source.getConfig());
-    Bitmap overlay = Bitmap.createBitmap(source.getWidth(), source.getHeight(), source.getConfig());
+    int width = source.getWidth();
+    int height = source.getHeight();
+    Bitmap result = Bitmap.createBitmap(width, height, source.getConfig());
+    Bitmap overlay = Bitmap.createBitmap(width, height, source.getConfig());
+
+    int[] pixels = new int[width * height];
     int delta = source.getHeight() / 6;
-    for (int y=0; y<source.getHeight(); ++y) {
-      for (int x=0; x<source.getWidth(); ++x) {
-        if (y/delta < 1) {
-          overlay.setPixel(x, y, res.getColor(R.color.celebrate_color_overlay1));
-        } else if (y/delta < 2) {
-          overlay.setPixel(x, y, res.getColor(R.color.celebrate_color_overlay2));
-        } else if (y/delta < 3) {
-          overlay.setPixel(x, y, res.getColor(R.color.celebrate_color_overlay3));
-        } else if (y/delta < 4) {
-          overlay.setPixel(x, y, res.getColor(R.color.celebrate_color_overlay4));
-        } else if (y/delta < 5) {
-          overlay.setPixel(x, y, res.getColor(R.color.celebrate_color_overlay5));
+    int color1 = res.getColor(R.color.celebrate_color_overlay1);
+    int color2 = res.getColor(R.color.celebrate_color_overlay2);
+    int color3 = res.getColor(R.color.celebrate_color_overlay3);
+    int color4 = res.getColor(R.color.celebrate_color_overlay4);
+    int color5 = res.getColor(R.color.celebrate_color_overlay5);
+    int color6 = res.getColor(R.color.celebrate_color_overlay6);
+    for (int y = 0; y < height; ++y) {
+      for (int x = 0; x < width; ++x) {
+        if (y / delta < 1) {
+          pixels[x + y * width] = color1;
+        } else if (y / delta < 2) {
+          pixels[x + y * width] = color2;
+        } else if (y / delta < 3) {
+          pixels[x + y * width] = color3;
+        } else if (y / delta < 4) {
+          pixels[x + y * width] = color4;
+        } else if (y / delta < 5) {
+          pixels[x + y * width] = color5;
         } else {
-          overlay.setPixel(x, y, res.getColor(R.color.celebrate_color_overlay6));
+          pixels[x + y * width] = color6;
         }
       }
     }
+    overlay.setPixels(pixels, 0, width, 0, 0, width, height);
 
     Canvas canvas = new Canvas(result);
     canvas.drawBitmap(source, new Matrix(), null);
