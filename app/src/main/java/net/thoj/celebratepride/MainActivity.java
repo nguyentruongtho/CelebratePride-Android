@@ -14,6 +14,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ShareActionProvider;
 import android.widget.Toast;
@@ -41,6 +42,8 @@ public class MainActivity extends AppCompatActivity {
   private static final String FIRST_LAUNCH_PREF = TAG + ".firstLaunch";
 
   @InjectView(R.id.photo) ImageButton photo;
+  @InjectView(android.R.id.progress) View progress;
+
   @OnClick(R.id.photo) void sharePhoto() {
     if (lastUri != null) {
       Picasso.with(this)
@@ -48,9 +51,7 @@ public class MainActivity extends AppCompatActivity {
           .transform(new CelebratePrideTransformation(this))
           .into(shareBitmapTarget);
     } else {
-      Picasso.with(this)
-          .load(R.drawable.sample)
-          .into(shareBitmapTarget);
+      Picasso.with(this).load(R.drawable.sample).into(shareBitmapTarget);
     }
   }
 
@@ -83,8 +84,9 @@ public class MainActivity extends AppCompatActivity {
       Intent myIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
       startActivity(myIntent);
     } catch (ActivityNotFoundException e) {
-      Toast.makeText(this, "No application can handle this request."
-          + " Please install a webbrowser",  Toast.LENGTH_LONG).show();
+      Toast.makeText(this,
+          "No application can handle this request." + " Please install a webbrowser",
+          Toast.LENGTH_LONG).show();
       e.printStackTrace();
     }
   }
@@ -109,18 +111,18 @@ public class MainActivity extends AppCompatActivity {
   }
 
   @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-      super.onActivityResult(requestCode, resultCode, data);
+    super.onActivityResult(requestCode, resultCode, data);
 
-      if (resultCode == Activity.RESULT_OK && data != null) {
-        switch (requestCode) {
-          case REQUEST_GALLERY_PICTURE:
-            handleGalleryPicture(data);
-            break;
-          case REQUEST_TAKE_PICTURE:
-            handleCameraPicture(data);
-            break;
-        }
+    if (resultCode == Activity.RESULT_OK && data != null) {
+      switch (requestCode) {
+        case REQUEST_GALLERY_PICTURE:
+          handleGalleryPicture(data);
+          break;
+        case REQUEST_TAKE_PICTURE:
+          handleCameraPicture(data);
+          break;
       }
+    }
   }
 
   private void handleCameraPicture(Intent data) {
@@ -141,7 +143,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     FileOutputStream out = null;
-    File imageFile = new File(imageFileFolder, "celebrate-pride-" + System.currentTimeMillis() + ".jpg");
+    File imageFile =
+        new File(imageFileFolder, "celebrate-pride-" + System.currentTimeMillis() + ".jpg");
     try {
       out = new FileOutputStream(imageFile);
       imageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
@@ -187,24 +190,28 @@ public class MainActivity extends AppCompatActivity {
 
       if (imageFile.exists()) {
         displayPhoto(imageFile);
+      } else {
+        Toast.makeText(this, R.string.error_load_image, Toast.LENGTH_SHORT).show();
       }
     }
   }
 
   private void displayPhoto(final Uri imageUri) {
+    progress.setVisibility(View.VISIBLE);
     Picasso.with(this)
         .load(imageUri)
-        .transform(new CelebratePrideTransformation(this))
-        .placeholder(R.drawable.sample)
+        .resize((int) getResources().getDimension(R.dimen.photo_size), 0)
         .error(R.drawable.t7m)
+        .transform(new CelebratePrideTransformation(this))
         .into(photo, new Callback() {
           @Override public void onSuccess() {
             lastUri = imageUri;
-
+            progress.setVisibility(View.GONE);
             checkFirstLaunch();
           }
 
           @Override public void onError() {
+            progress.setVisibility(View.GONE);
             Toast.makeText(MainActivity.this, R.string.error_load_image, Toast.LENGTH_SHORT).show();
           }
         });
@@ -243,11 +250,11 @@ public class MainActivity extends AppCompatActivity {
     return super.onOptionsItemSelected(item);
   }
 
-
   public class ShareTarget implements Target {
     @Override public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
       if (shareActionProvider != null) {
-        String pathOfBmp = MediaStore.Images.Media.insertImage(getContentResolver(), bitmap, null, null);
+        String pathOfBmp =
+            MediaStore.Images.Media.insertImage(getContentResolver(), bitmap, null, null);
         Uri bmpUri = Uri.parse(pathOfBmp);
         final Intent sendIntent = new Intent(android.content.Intent.ACTION_SEND);
         sendIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -267,5 +274,5 @@ public class MainActivity extends AppCompatActivity {
 
     @Override public void onPrepareLoad(Drawable placeHolderDrawable) {
     }
-  };
+  }
 }
