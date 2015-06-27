@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <color name="celebrate_color1">#80ff3e18</color>
+  <color name="celebrate_color2">#80fc9a00</color>
+  <color name="celebrate_color3">#80ffd800</color>
+  <color name="celebrate_color4">#a039ea7c</color>
+  <color name="celebrate_color5">#a00bb2ff</color>
+  <color name="celebrate_color6">#80985aff</color>
+  <color name="celebrate_color_overlay1">#50ff3e18</color>
+  <color name="celebrate_color_overlay2">#50fc9a00</color>
+  <color name="celebrate_color_overlay3">#50ffd800</color>
+  <color name="celebrate_color_overlay4">#5039ea7c</color>
+  <color name="celebrate_color_overlay5">#500bb2ff</color>
+  <color name="celebrate_color_overlay6">#50985aff</color>
+</resources>

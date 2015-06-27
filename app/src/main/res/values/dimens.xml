@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <dimen name="activity_horizontal_margin">@dimen/size_02</dimen>
+  <dimen name="activity_vertical_margin">@dimen/size_02</dimen>
+  <dimen name="photo_size">300dp</dimen>
+  <dimen name="size_01">8dp</dimen>
+  <dimen name="size_02">16dp</dimen>
+  <dimen name="size_03">24dp</dimen>
+  <dimen name="size_04">32dp</dimen>
+</resources>

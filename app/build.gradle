@@ -1,0 +1,30 @@
+apply plugin: 'com.android.application'
+
+android {
+  compileSdkVersion 22
+  buildToolsVersion "22.0.1"
+
+  defaultConfig {
+    applicationId "net.thoj.celebratepride"
+    minSdkVersion 14
+    targetSdkVersion 22
+    versionCode 1
+    versionName "1.0"
+  }
+
+  buildTypes {
+    debug {
+      applicationIdSuffix '.dev'
+      versionNameSuffix '-dev'
+    }
+  }
+}
+
+dependencies {
+  compile fileTree(dir: 'libs', include: ['*.jar'])
+  compile 'com.android.support:appcompat-v7:22.1.1'
+  compile 'com.android.support:cardview-v7:22.1.1'
+
+  compile 'com.jakewharton:butterknife:6.1.0'
+  compile 'com.squareup.picasso:picasso:2.5.2'
+}
