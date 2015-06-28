@@ -11,6 +11,7 @@
   <string name="error_from_online_gallery">Oops, this is an online photo which is not yet supported! \nPlease pick another one.</string>
   <string name="error_get_image_from_camera">There was an error getting photo data from your camera. Please try again.</string>
   <string name="error_load_image">Unable to load image</string>
+  <string name="error_store_image">Unable to store image</string>
   <string name="guide_how_to_share">Click on the photo to share it!</string>
   <string name="share_title">Created with bit.ly/celebrate-pride-app</string>
   <string name="share_to">Share to</string>

@@ -11,6 +11,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -143,7 +144,14 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void handleBitmapPicture(Bitmap imageBitmap) {
-    File imageFileFolder = new File(this.getCacheDir(), "CelebratePrideTransformation");
+    File imageFile = bitmapToFile(imageBitmap, this.getCacheDir());
+    if (imageFile != null) {
+      displayPhoto(imageFile);
+    }
+  }
+
+  @Nullable private File bitmapToFile(Bitmap imageBitmap, File directory) {
+    File imageFileFolder = new File(directory, "CelebratePrideTransformation");
     if (!imageFileFolder.exists()) {
       imageFileFolder.mkdir();
     }
@@ -157,7 +165,7 @@ public class MainActivity extends AppCompatActivity {
       out.flush();
     } catch (IOException e) {
       Log.e(TAG, "Failed to convert image to JPEG" + e.getMessage());
-      return;
+      return null;
     } finally {
       try {
         if (out != null) {
@@ -166,8 +174,7 @@ public class MainActivity extends AppCompatActivity {
       } catch (IOException ignored) {
       }
     }
-
-    displayPhoto(imageFile);
+    return imageFile;
   }
 
   private void handleGalleryPicture(Intent data) {
@@ -276,18 +283,22 @@ public class MainActivity extends AppCompatActivity {
   public class ShareTarget implements Target {
     @Override public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
       if (shareActionProvider != null) {
+        final Intent sendIntent = new Intent(android.content.Intent.ACTION_SEND);
         String pathOfBmp =
             MediaStore.Images.Media.insertImage(getContentResolver(), bitmap, null, null);
-        Uri bmpUri = Uri.parse(pathOfBmp);
-        final Intent sendIntent = new Intent(android.content.Intent.ACTION_SEND);
-        sendIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        sendIntent.putExtra(Intent.EXTRA_STREAM, bmpUri);
-        sendIntent.setType("image/*");
-        sendIntent.putExtra(Intent.EXTRA_TEXT, getString(R.string.share_title));
-        sendIntent.putExtra(Intent.EXTRA_TITLE, getString(R.string.share_title));
-        sendIntent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.share_title));
-        startActivity(Intent.createChooser(sendIntent, getResources().getText(R.string.share_to)));
-        shareActionProvider.setShareIntent(sendIntent);
+
+        if (pathOfBmp != null) {
+          sendIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse(pathOfBmp));
+          sendIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+          sendIntent.setType("image/*");
+          sendIntent.putExtra(Intent.EXTRA_TEXT, getString(R.string.share_title));
+          sendIntent.putExtra(Intent.EXTRA_TITLE, getString(R.string.share_title));
+          sendIntent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.share_title));
+          startActivity(Intent.createChooser(sendIntent, getResources().getText(R.string.share_to)));
+          shareActionProvider.setShareIntent(sendIntent);
+        } else {
+          Toast.makeText(MainActivity.this, R.string.error_store_image, Toast.LENGTH_SHORT).show();
+        }
       }
     }
 
