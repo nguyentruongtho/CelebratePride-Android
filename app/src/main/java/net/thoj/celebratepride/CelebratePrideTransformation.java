@@ -5,49 +5,41 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
+import android.graphics.Rect;
 import com.squareup.picasso.Transformation;
 
 public class CelebratePrideTransformation implements Transformation {
-  private final Resources res;
+  private final int[] colors;
 
   public CelebratePrideTransformation(Context context) {
-    this.res = context.getResources();
+    Resources res = context.getResources();
+
+    colors = new int[] {
+        res.getColor(R.color.celebrate_color_overlay1),
+        res.getColor(R.color.celebrate_color_overlay2),
+        res.getColor(R.color.celebrate_color_overlay3),
+        res.getColor(R.color.celebrate_color_overlay4),
+        res.getColor(R.color.celebrate_color_overlay5),
+        res.getColor(R.color.celebrate_color_overlay6)
+    };
   }
 
   @Override public Bitmap transform(Bitmap source) {
     int width = source.getWidth();
     int height = source.getHeight();
     Bitmap result = Bitmap.createBitmap(width, height, source.getConfig());
-    Bitmap overlay = Bitmap.createBitmap(width, height, source.getConfig());
-
-    int delta = source.getHeight() / 6;
-    int color1 = res.getColor(R.color.celebrate_color_overlay1);
-    int color2 = res.getColor(R.color.celebrate_color_overlay2);
-    int color3 = res.getColor(R.color.celebrate_color_overlay3);
-    int color4 = res.getColor(R.color.celebrate_color_overlay4);
-    int color5 = res.getColor(R.color.celebrate_color_overlay5);
-    int color6 = res.getColor(R.color.celebrate_color_overlay6);
-    for (int y = 0; y < height; ++y) {
-      for (int x = 0; x < width; ++x) {
-        if (y / delta < 1) {
-          overlay.setPixel(x, y, color1);
-        } else if (y / delta < 2) {
-          overlay.setPixel(x, y, color2);
-        } else if (y / delta < 3) {
-          overlay.setPixel(x, y, color3);
-        } else if (y / delta < 4) {
-          overlay.setPixel(x, y, color4);
-        } else if (y / delta < 5) {
-          overlay.setPixel(x, y, color5);
-        } else {
-          overlay.setPixel(x, y, color6);
-        }
-      }
-    }
+    Bitmap overlay = Bitmap.createBitmap(1, colors.length, source.getConfig());
 
     Canvas canvas = new Canvas(result);
     canvas.drawBitmap(source, new Matrix(), null);
-    canvas.drawBitmap(overlay, 0, 0, null);
+
+    for (int i = 0; i < colors.length; ++i) {
+      overlay.setPixel(0, i, colors[i]);
+    }
+
+    canvas.drawBitmap(overlay, new Rect(0, 0, 1, colors.length - 1),
+        new Rect(0, 0, width - 1, height - 1), null);
+
     if (source != result) {
       source.recycle();
     }
