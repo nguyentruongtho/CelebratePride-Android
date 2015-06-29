@@ -12,7 +12,10 @@
   <string name="error_get_image_from_camera">There was an error getting photo data from your camera. Please try again.</string>
   <string name="error_load_image">Unable to load image</string>
   <string name="error_store_image">Unable to store image</string>
-  <string name="guide_how_to_share">Click on the photo to share it!</string>
-  <string name="share_title">Created with bit.ly/celebrate-pride-app</string>
+  <string name="error_save_image">Unable to save image: %s</string>
+
+  <string name="guide_how_to_share">Click on the photo to save &amp; share it!</string>
+  <string name="share_title">Created with http://bit.ly/celebrate-pride-android</string>
   <string name="share_to">Share to</string>
+  <string name="saved">Photo is automatically saved!</string>
 </resources>

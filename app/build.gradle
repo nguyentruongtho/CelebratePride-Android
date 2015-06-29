@@ -13,7 +13,7 @@ android {
     applicationId "net.thoj.celebratepride"
     minSdkVersion 14
     targetSdkVersion 22
-    versionCode 5
+    versionCode 6
     versionName "1.0"
   }
 

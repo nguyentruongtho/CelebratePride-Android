@@ -30,7 +30,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import static android.content.Intent.ACTION_MEDIA_SCANNER_SCAN_FILE;
 import static android.content.Intent.ACTION_PICK;
+import static android.content.Intent.ACTION_SEND;
 import static android.provider.MediaStore.ACTION_IMAGE_CAPTURE;
 import static android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
 import static android.provider.MediaStore.MediaColumns.DATA;
@@ -209,7 +211,8 @@ public class MainActivity extends AppCompatActivity {
             BitmapFactory.decodeFile(dataPath, options);
 
             int scale = 1;
-            while (options.outWidth / scale / 2 >= REQUIRED_SIZE && options.outHeight / scale / 2 >= REQUIRED_SIZE) scale *= 2;
+            while (options.outWidth / scale / 2 >= REQUIRED_SIZE &&
+                options.outHeight / scale / 2 >= REQUIRED_SIZE) scale *= 2;
 
             //Decode with inSampleSize
             BitmapFactory.Options o2 = new BitmapFactory.Options();
@@ -283,18 +286,32 @@ public class MainActivity extends AppCompatActivity {
   public class ShareTarget implements Target {
     @Override public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
       if (shareActionProvider != null) {
-        final Intent sendIntent = new Intent(android.content.Intent.ACTION_SEND);
         String pathOfBmp =
             MediaStore.Images.Media.insertImage(getContentResolver(), bitmap, null, null);
 
         if (pathOfBmp != null) {
-          sendIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse(pathOfBmp));
+          Uri uri = Uri.parse(pathOfBmp);
+          // save image
+          try {
+            Intent mediaScanIntent = new Intent(ACTION_MEDIA_SCANNER_SCAN_FILE, uri);
+            sendBroadcast(mediaScanIntent);
+            Toast.makeText(MainActivity.this, R.string.saved, Toast.LENGTH_SHORT).show();
+          } catch (Exception ex) {
+            Toast.makeText(MainActivity.this,
+                getResources().getString(R.string.error_save_image, ex.getMessage()),
+                Toast.LENGTH_LONG).show();
+          }
+
+          // share image
+          final Intent sendIntent = new Intent(ACTION_SEND);
+          sendIntent.putExtra(Intent.EXTRA_STREAM, uri);
           sendIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
           sendIntent.setType("image/*");
           sendIntent.putExtra(Intent.EXTRA_TEXT, getString(R.string.share_title));
           sendIntent.putExtra(Intent.EXTRA_TITLE, getString(R.string.share_title));
           sendIntent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.share_title));
-          startActivity(Intent.createChooser(sendIntent, getResources().getText(R.string.share_to)));
+          startActivity(Intent.createChooser(sendIntent,
+              getResources().getText(R.string.share_to)));
           shareActionProvider.setShareIntent(sendIntent);
         } else {
           Toast.makeText(MainActivity.this, R.string.error_store_image, Toast.LENGTH_SHORT).show();
