@@ -10,7 +10,9 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -20,20 +22,24 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ShareActionProvider;
 import android.widget.Toast;
-import butterknife.ButterKnife;
-import butterknife.InjectView;
-import butterknife.OnClick;
+
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+
+import butterknife.ButterKnife;
+import butterknife.InjectView;
+import butterknife.OnClick;
 
 import static android.content.Intent.ACTION_MEDIA_SCANNER_SCAN_FILE;
 import static android.content.Intent.ACTION_PICK;
 import static android.content.Intent.ACTION_SEND;
 import static android.provider.MediaStore.ACTION_IMAGE_CAPTURE;
+import static android.provider.MediaStore.EXTRA_OUTPUT;
 import static android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
 import static android.provider.MediaStore.MediaColumns.DATA;
 import static android.provider.MediaStore.MediaColumns.MIME_TYPE;
@@ -50,10 +56,10 @@ public class MainActivity extends AppCompatActivity {
   @InjectView(R.id.photo) ImageButton photo;
   @InjectView(android.R.id.progress) View progress;
 
-  @OnClick(R.id.photo) void sharePhoto() {
+  @OnClick(R.id.photo)
+  void sharePhoto() {
     if (lastUri != null) {
-      picasso
-          .load(lastUri)
+      picasso.load(lastUri)
           .transform(new CelebratePrideTransformation(this))
           .into(shareBitmapTarget);
     } else {
@@ -61,27 +67,34 @@ public class MainActivity extends AppCompatActivity {
     }
   }
 
-  @OnClick(R.id.take_picture) void handleTakePicture() {
+  @OnClick(R.id.take_picture)
+  void handleTakePicture() {
     Intent takePictureIntent = new Intent(ACTION_IMAGE_CAPTURE);
+    lastOriginalUri = Uri.fromFile(generateFilePath(Environment.getExternalStorageDirectory()));
+    takePictureIntent.putExtra(EXTRA_OUTPUT, lastOriginalUri);
     if (takePictureIntent.resolveActivity(this.getPackageManager()) != null) {
       startActivityForResult(takePictureIntent, REQUEST_TAKE_PICTURE);
     }
   }
 
-  @OnClick(R.id.pick_photo) void handlePickPhoto() {
+  @OnClick(R.id.pick_photo)
+  void handlePickPhoto() {
     Intent pickGalleryPictureIntent = new Intent(ACTION_PICK, EXTERNAL_CONTENT_URI);
     startActivityForResult(pickGalleryPictureIntent, REQUEST_GALLERY_PICTURE);
   }
 
-  @OnClick(R.id.import_facebook) void handleImportFacebook() {
+  @OnClick(R.id.import_facebook)
+  void handleImportFacebook() {
     // TODO don't want to add heavy facebook library and require internet permission for now
   }
 
-  @OnClick({ R.id.t7m_1, R.id.t7m_2 }) void thongAssThoBayMau() {
+  @OnClick({ R.id.t7m_1, R.id.t7m_2 })
+  void thongAssThoBayMau() {
     openLink("https://www.facebook.com/ThoBayMau");
   }
 
-  @OnClick({ R.id.source_1, R.id.source_2 }) void openSourceCodePage() {
+  @OnClick({ R.id.source_1, R.id.source_2 })
+  void openSourceCodePage() {
     openLink("https://bit.ly/celebrate-pride");
   }
 
@@ -100,9 +113,11 @@ public class MainActivity extends AppCompatActivity {
   private ShareActionProvider shareActionProvider;
   private Target shareBitmapTarget;
   private Uri lastUri;
+  private Uri lastOriginalUri;
   private Picasso picasso;
 
-  @Override protected void onCreate(Bundle savedInstanceState) {
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
 
@@ -112,36 +127,25 @@ public class MainActivity extends AppCompatActivity {
     picasso = Picasso.with(this);
   }
 
-  @Override protected void onDestroy() {
+  @Override
+  protected void onDestroy() {
     shareBitmapTarget = null;
     shareActionProvider = null;
     picasso.cancelRequest(photo);
     super.onDestroy();
   }
 
-  @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+  @Override
+  protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     super.onActivityResult(requestCode, resultCode, data);
 
-    if (resultCode == Activity.RESULT_OK && data != null) {
-      switch (requestCode) {
-        case REQUEST_GALLERY_PICTURE:
-          handleGalleryPicture(data);
-          break;
-        case REQUEST_TAKE_PICTURE:
-          handleCameraPicture(data);
-          break;
+    if (resultCode == Activity.RESULT_OK) {
+      if (data != null && requestCode == REQUEST_GALLERY_PICTURE) {
+        handleGalleryPicture(data);
       }
-    }
-  }
-
-  private void handleCameraPicture(Intent data) {
-    try {
-      Bundle extras = data.getExtras();
-      Bitmap imageBitmap = (Bitmap) extras.get("data");
-
-      handleBitmapPicture(imageBitmap);
-    } catch (Exception ex) {
-      Toast.makeText(this, R.string.error_get_image_from_camera, Toast.LENGTH_LONG).show();
+      if (requestCode == REQUEST_TAKE_PICTURE) {
+        handleSavedImage(lastOriginalUri.getPath());
+      }
     }
   }
 
@@ -152,15 +156,10 @@ public class MainActivity extends AppCompatActivity {
     }
   }
 
-  @Nullable private File bitmapToFile(Bitmap imageBitmap, File directory) {
-    File imageFileFolder = new File(directory, "CelebratePrideTransformation");
-    if (!imageFileFolder.exists()) {
-      imageFileFolder.mkdir();
-    }
-
+  @Nullable
+  private File bitmapToFile(Bitmap imageBitmap, File directory) {
+    File imageFile = generateFilePath(directory);
     FileOutputStream out = null;
-    File imageFile =
-        new File(imageFileFolder, "celebrate-pride-" + System.currentTimeMillis() + ".jpg");
     try {
       out = new FileOutputStream(imageFile);
       imageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
@@ -177,6 +176,16 @@ public class MainActivity extends AppCompatActivity {
       }
     }
     return imageFile;
+  }
+
+  @NonNull
+  private File generateFilePath(File directory) {
+    File imageFileFolder = new File(directory, "CelebratePrideTransformation");
+    if (!imageFileFolder.exists()) {
+      imageFileFolder.mkdir();
+    }
+
+    return new File(imageFileFolder, "celebrate-pride-" + System.currentTimeMillis() + ".jpg");
   }
 
   private void handleGalleryPicture(Intent data) {
@@ -201,30 +210,36 @@ public class MainActivity extends AppCompatActivity {
       displayPhoto(dataPath);
       Toast.makeText(this, R.string.error_from_online_gallery, Toast.LENGTH_LONG).show();
     } else {
-      File imageFile = new File(dataPath);
+      handleSavedImage(dataPath);
+    }
+  }
 
-      if (imageFile.exists()) {
-        if (imageFile.length() > FILE_SIZE_1M) {
-          BitmapFactory.Options options = new BitmapFactory.Options();
-          try {
-            options.inJustDecodeBounds = true;
-            BitmapFactory.decodeFile(dataPath, options);
+  private void handleSavedImage(String dataPath) {
+    File imageFile = new File(dataPath);
 
-            int scale = 1;
-            while (options.outWidth / scale / 2 >= REQUIRED_SIZE &&
-                options.outHeight / scale / 2 >= REQUIRED_SIZE) scale *= 2;
+    if (imageFile.exists()) {
+      if (imageFile.length() > FILE_SIZE_1M) {
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        try {
+          options.inJustDecodeBounds = true;
+          BitmapFactory.decodeFile(dataPath, options);
 
-            //Decode with inSampleSize
-            BitmapFactory.Options o2 = new BitmapFactory.Options();
-            o2.inSampleSize = scale;
-            options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-            handleBitmapPicture(BitmapFactory.decodeFile(dataPath, o2));
-          } catch (Exception ex) {
-            Toast.makeText(this, R.string.error_load_image, Toast.LENGTH_SHORT).show();
+          int scale = 1;
+          while (options.outWidth / scale / 2 >= REQUIRED_SIZE
+              && options.outHeight / scale / 2 >= REQUIRED_SIZE) {
+            scale *= 2;
           }
-        } else {
-          displayPhoto(imageFile);
+
+          //Decode with inSampleSize
+          BitmapFactory.Options o2 = new BitmapFactory.Options();
+          o2.inSampleSize = scale;
+          options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+          handleBitmapPicture(BitmapFactory.decodeFile(dataPath, o2));
+        } catch (Exception ex) {
+          Toast.makeText(this, R.string.error_load_image, Toast.LENGTH_SHORT).show();
         }
+      } else {
+        displayPhoto(imageFile);
       }
     }
   }
@@ -236,13 +251,15 @@ public class MainActivity extends AppCompatActivity {
         .error(R.drawable.t7m)
         .transform(new CelebratePrideTransformation(this))
         .into(photo, new Callback() {
-          @Override public void onSuccess() {
+          @Override
+          public void onSuccess() {
             lastUri = imageUri;
             progress.setVisibility(View.GONE);
             checkFirstLaunch();
           }
 
-          @Override public void onError() {
+          @Override
+          public void onError() {
             progress.setVisibility(View.GONE);
             Log.d(TAG, "Unable to load image " + imageUri);
             Toast.makeText(MainActivity.this, R.string.error_load_image, Toast.LENGTH_SHORT).show();
@@ -266,12 +283,14 @@ public class MainActivity extends AppCompatActivity {
     displayPhoto(Uri.parse(dataPath));
   }
 
-  @Override public boolean onCreateOptionsMenu(Menu menu) {
+  @Override
+  public boolean onCreateOptionsMenu(Menu menu) {
     getMenuInflater().inflate(R.menu.menu_main, menu);
     return true;
   }
 
-  @Override public boolean onOptionsItemSelected(MenuItem item) {
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item) {
     int id = item.getItemId();
 
     //noinspection SimplifiableIfStatement
@@ -284,7 +303,8 @@ public class MainActivity extends AppCompatActivity {
   }
 
   public class ShareTarget implements Target {
-    @Override public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+    @Override
+    public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
       if (shareActionProvider != null) {
         String pathOfBmp =
             MediaStore.Images.Media.insertImage(getContentResolver(), bitmap, null, null);
@@ -310,8 +330,8 @@ public class MainActivity extends AppCompatActivity {
           sendIntent.putExtra(Intent.EXTRA_TEXT, getString(R.string.share_title));
           sendIntent.putExtra(Intent.EXTRA_TITLE, getString(R.string.share_title));
           sendIntent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.share_title));
-          startActivity(Intent.createChooser(sendIntent,
-              getResources().getText(R.string.share_to)));
+          startActivity(
+              Intent.createChooser(sendIntent, getResources().getText(R.string.share_to)));
           shareActionProvider.setShareIntent(sendIntent);
         } else {
           Toast.makeText(MainActivity.this, R.string.error_store_image, Toast.LENGTH_SHORT).show();
@@ -319,11 +339,13 @@ public class MainActivity extends AppCompatActivity {
       }
     }
 
-    @Override public void onBitmapFailed(Drawable errorDrawable) {
+    @Override
+    public void onBitmapFailed(Drawable errorDrawable) {
       Toast.makeText(MainActivity.this, R.string.error_load_image, Toast.LENGTH_LONG).show();
     }
 
-    @Override public void onPrepareLoad(Drawable placeHolderDrawable) {
+    @Override
+    public void onPrepareLoad(Drawable placeHolderDrawable) {
     }
   }
 }
