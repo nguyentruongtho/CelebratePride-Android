@@ -50,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
   private static final int REQUEST_TAKE_PICTURE = 1;
   private static final int REQUEST_GALLERY_PICTURE = 2;
   private static final String FIRST_LAUNCH_PREF = TAG + ".firstLaunch";
+  private static final String LAST_ORIGINAL_IMAGE_PREF = TAG + ".lastOriginal";
   private static final long FILE_SIZE_1M = 1024 * 1024;
   private static final int REQUIRED_SIZE = 800; // 800 pixel width
 
@@ -70,7 +71,8 @@ public class MainActivity extends AppCompatActivity {
   @OnClick(R.id.take_picture)
   void handleTakePicture() {
     Intent takePictureIntent = new Intent(ACTION_IMAGE_CAPTURE);
-    lastOriginalUri = Uri.fromFile(generateFilePath(Environment.getExternalStorageDirectory()));
+    Uri lastOriginalUri = Uri.fromFile(generateFilePath(Environment.getExternalStorageDirectory()));
+    saveLastOriginalImage(lastOriginalUri.getPath());
     takePictureIntent.putExtra(EXTRA_OUTPUT, lastOriginalUri);
     if (takePictureIntent.resolveActivity(this.getPackageManager()) != null) {
       startActivityForResult(takePictureIntent, REQUEST_TAKE_PICTURE);
@@ -113,7 +115,6 @@ public class MainActivity extends AppCompatActivity {
   private ShareActionProvider shareActionProvider;
   private Target shareBitmapTarget;
   private Uri lastUri;
-  private Uri lastOriginalUri;
   private Picasso picasso;
 
   @Override
@@ -144,7 +145,8 @@ public class MainActivity extends AppCompatActivity {
         handleGalleryPicture(data);
       }
       if (requestCode == REQUEST_TAKE_PICTURE) {
-        handleSavedImage(lastOriginalUri.getPath());
+        SharedPreferences settings = getSharedPreferences(TAG, MODE_PRIVATE);
+        handleSavedImage(settings.getString(LAST_ORIGINAL_IMAGE_PREF, null));
       }
     }
   }
@@ -241,6 +243,7 @@ public class MainActivity extends AppCompatActivity {
       } else {
         displayPhoto(imageFile);
       }
+      saveLastOriginalImage(null);
     }
   }
 
@@ -273,6 +276,11 @@ public class MainActivity extends AppCompatActivity {
       Toast.makeText(this, R.string.guide_how_to_share, Toast.LENGTH_LONG).show();
       settings.edit().putBoolean(FIRST_LAUNCH_PREF, false).apply();
     }
+  }
+
+  private void saveLastOriginalImage(String path) {
+    SharedPreferences settings = getSharedPreferences(TAG, MODE_PRIVATE);
+    settings.edit().putString(LAST_ORIGINAL_IMAGE_PREF, path).apply();
   }
 
   private void displayPhoto(File savedImageFile) {
