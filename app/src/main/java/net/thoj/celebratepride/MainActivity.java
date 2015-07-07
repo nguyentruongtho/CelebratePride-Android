@@ -32,7 +32,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import butterknife.ButterKnife;
-import butterknife.InjectView;
+import butterknife.Bind;
 import butterknife.OnClick;
 
 import static android.content.Intent.ACTION_MEDIA_SCANNER_SCAN_FILE;
@@ -54,11 +54,10 @@ public class MainActivity extends AppCompatActivity {
   private static final long FILE_SIZE_1M = 1024 * 1024;
   private static final int REQUIRED_SIZE = 800; // 800 pixel width
 
-  @InjectView(R.id.photo) ImageButton photo;
-  @InjectView(android.R.id.progress) View progress;
+  @Bind(R.id.photo) ImageButton photo;
+  @Bind(android.R.id.progress) View progress;
 
-  @OnClick(R.id.photo)
-  void sharePhoto() {
+  @OnClick(R.id.photo) void sharePhoto() {
     if (lastUri != null) {
       picasso.load(lastUri)
           .transform(new CelebratePrideTransformation(this))
@@ -68,8 +67,7 @@ public class MainActivity extends AppCompatActivity {
     }
   }
 
-  @OnClick(R.id.take_picture)
-  void handleTakePicture() {
+  @OnClick(R.id.take_picture) void handleTakePicture() {
     Intent takePictureIntent = new Intent(ACTION_IMAGE_CAPTURE);
     Uri lastOriginalUri = Uri.fromFile(generateFilePath(Environment.getExternalStorageDirectory()));
     saveLastOriginalImage(lastOriginalUri.getPath());
@@ -79,24 +77,20 @@ public class MainActivity extends AppCompatActivity {
     }
   }
 
-  @OnClick(R.id.pick_photo)
-  void handlePickPhoto() {
+  @OnClick(R.id.pick_photo) void handlePickPhoto() {
     Intent pickGalleryPictureIntent = new Intent(ACTION_PICK, EXTERNAL_CONTENT_URI);
     startActivityForResult(pickGalleryPictureIntent, REQUEST_GALLERY_PICTURE);
   }
 
-  @OnClick(R.id.import_facebook)
-  void handleImportFacebook() {
+  @OnClick(R.id.import_facebook) void handleImportFacebook() {
     // TODO don't want to add heavy facebook library and require internet permission for now
   }
 
-  @OnClick({ R.id.t7m_1, R.id.t7m_2 })
-  void thongAssThoBayMau() {
+  @OnClick({ R.id.t7m_1, R.id.t7m_2 }) void thongAssThoBayMau() {
     openLink("https://www.facebook.com/ThoBayMau");
   }
 
-  @OnClick({ R.id.source_1, R.id.source_2 })
-  void openSourceCodePage() {
+  @OnClick({ R.id.source_1, R.id.source_2 }) void openSourceCodePage() {
     openLink("https://bit.ly/celebrate-pride");
   }
 
@@ -117,27 +111,24 @@ public class MainActivity extends AppCompatActivity {
   private Uri lastUri;
   private Picasso picasso;
 
-  @Override
-  protected void onCreate(Bundle savedInstanceState) {
+  @Override protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
 
-    ButterKnife.inject(this);
+    ButterKnife.bind(this);
     shareBitmapTarget = new ShareTarget();
     shareActionProvider = new ShareActionProvider(this);
     picasso = Picasso.with(this);
   }
 
-  @Override
-  protected void onDestroy() {
+  @Override protected void onDestroy() {
     shareBitmapTarget = null;
     shareActionProvider = null;
     picasso.cancelRequest(photo);
     super.onDestroy();
   }
 
-  @Override
-  protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+  @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     super.onActivityResult(requestCode, resultCode, data);
 
     if (resultCode == Activity.RESULT_OK) {
@@ -158,8 +149,7 @@ public class MainActivity extends AppCompatActivity {
     }
   }
 
-  @Nullable
-  private File bitmapToFile(Bitmap imageBitmap, File directory) {
+  @Nullable private File bitmapToFile(Bitmap imageBitmap, File directory) {
     File imageFile = generateFilePath(directory);
     FileOutputStream out = null;
     try {
@@ -180,8 +170,7 @@ public class MainActivity extends AppCompatActivity {
     return imageFile;
   }
 
-  @NonNull
-  private File generateFilePath(File directory) {
+  @NonNull private File generateFilePath(File directory) {
     File imageFileFolder = new File(directory, "CelebratePrideTransformation");
     if (!imageFileFolder.exists()) {
       imageFileFolder.mkdir();
@@ -254,15 +243,13 @@ public class MainActivity extends AppCompatActivity {
         .error(R.drawable.t7m)
         .transform(new CelebratePrideTransformation(this))
         .into(photo, new Callback() {
-          @Override
-          public void onSuccess() {
+          @Override public void onSuccess() {
             lastUri = imageUri;
             progress.setVisibility(View.GONE);
             checkFirstLaunch();
           }
 
-          @Override
-          public void onError() {
+          @Override public void onError() {
             progress.setVisibility(View.GONE);
             Log.d(TAG, "Unable to load image " + imageUri);
             Toast.makeText(MainActivity.this, R.string.error_load_image, Toast.LENGTH_SHORT).show();
@@ -291,14 +278,12 @@ public class MainActivity extends AppCompatActivity {
     displayPhoto(Uri.parse(dataPath));
   }
 
-  @Override
-  public boolean onCreateOptionsMenu(Menu menu) {
+  @Override public boolean onCreateOptionsMenu(Menu menu) {
     getMenuInflater().inflate(R.menu.menu_main, menu);
     return true;
   }
 
-  @Override
-  public boolean onOptionsItemSelected(MenuItem item) {
+  @Override public boolean onOptionsItemSelected(MenuItem item) {
     int id = item.getItemId();
 
     //noinspection SimplifiableIfStatement
@@ -311,8 +296,7 @@ public class MainActivity extends AppCompatActivity {
   }
 
   public class ShareTarget implements Target {
-    @Override
-    public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+    @Override public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
       if (shareActionProvider != null) {
         String pathOfBmp =
             MediaStore.Images.Media.insertImage(getContentResolver(), bitmap, null, null);
@@ -347,13 +331,11 @@ public class MainActivity extends AppCompatActivity {
       }
     }
 
-    @Override
-    public void onBitmapFailed(Drawable errorDrawable) {
+    @Override public void onBitmapFailed(Drawable errorDrawable) {
       Toast.makeText(MainActivity.this, R.string.error_load_image, Toast.LENGTH_LONG).show();
     }
 
-    @Override
-    public void onPrepareLoad(Drawable placeHolderDrawable) {
+    @Override public void onPrepareLoad(Drawable placeHolderDrawable) {
     }
   }
 }
